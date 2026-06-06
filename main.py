@@ -18,7 +18,7 @@ app.add_middleware(
 # Render'dan olingan kalitni o'qiydi
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-pro')
 
 class AIChat(BaseModel):
     fan_nomi: str
