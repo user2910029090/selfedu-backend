@@ -1,37 +1,54 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import uvicorn
-import google.generativeai as genai
 import os
+import google.generativeai as genai
 
-app = FastAPI(title="SelfEdu_Ai API")
+app = FastAPI()
 
-# API kalitni Render muhitidan o'qiymiz
-api_key = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=api_key)
+# CORS - Frontend bilan bog'lanish uchun
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-# Modelni o'rnatish
-try:
-    model = genai.GenerativeModel('gemini-1.5-flash') # 3.1 versiyasi hali hamma uchun ochiq bo'lmasligi mumkin
-except:
-    model = genai.GenerativeModel('gemini-pro')
+# AI va Baza sozlamalari (Hammasi kommentariyaga olindi)
+# genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# model = genai.GenerativeModel('gemini-1.5-flash')
 
-class AIChat(BaseModel):
-    fan_nomi: str
-    savol: str
+# Bazaviy simulyatsiya uchun xotira
+db_users = {} 
 
-# ASOSIY SAHIFA UCHUN (404 xatosini yo'qotadi)
-@app.get("/")
-async def root():
-    return {"message": "SelfEdu_AI serveri ishlamoqda!"}
+class UserAction(BaseModel):
+    ism: str
+    familiya: str = None
+    fan: str = None
+    savol: str = None
+    ball: int = 0
 
-@app.post("/chat")
-async def chat_with_ai(data: AIChat):
-    try:
-        response = model.generate_content(f"Fan: {data.fan_nomi}. Savol: {data.savol}")
-        return {"ai_javobi": response.text}
-    except Exception as e:
-        return {"xatolik": str(e)}
+# 1. Ro'yxatdan o'tish (Baza simulyatsiyasi)
+@app.post("/register")
+async def register(data: UserAction):
+    db_users[data.ism] = {"familiya": data.familiya, "ball": 0}
+    return {"message": f"{data.ism} tizimga qo'shildi", "status": "ok"}
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000)
+# 2. Fanlar va Mavzular (Frontend uchun)
+@app.get("/data")
+async def get_data():
+    return {
+        "fanlar": ["Biologiya", "Tarix", "O'zbek tili"],
+        "mavzular": ["Daraja 1: Kirish", "Daraja 2: Asoslar", "Daraja 3: Murakkab"]
+    }
+
+# 3. AI Maslahatchi (Sun'iy intellekt - Kommentariyada)
+# @app.post("/ask-ai")
+# async def ask_ai(data: UserAction):
+#     prompt = f"{data.fan} fani bo'yicha savol: {data.savol}"
+#     response = model.generate_content(prompt)
+#     return {"javob": response.text}
+
+# 4. Ballar va Kitoblar (Gamification - Baza simulyatsiyasi bilan)
+@app.post("/exchange")
+async def exchange_points(data: UserAction):
+    if data.ism in db_users:
+        # Ballarni ayirish logikasi
+        db_users[data.ism]["ball"] -= data.ball
+        return {"message": f"{data.ball} ball evaziga elektron kitob berildi!"}
+    return {"message": "Foydalanuvchi topilmadi"}
