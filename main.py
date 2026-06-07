@@ -29,20 +29,36 @@ async def register(data: UserAction):
     db_users[data.ism] = {"familiya": data.familiya, "ball": 0}
     return {"message": f"{data.ism} tizimga qo'shildi", "status": "ok"}
 
-# 2. Fanlar va Mavzular (Frontend uchun)
+# 2. Fanlar va Mavzular (Frontend uchun yangilangan 5 tadan mavzu bilan)
 @app.get("/data")
 async def get_data():
     return {
-        "fanlar": ["Biologiya", "Tarix", "O'zbek tili"],
-        "mavzular": ["Daraja 1: Kirish", "Daraja 2: Asoslar", "Daraja 3: Murakkab"]
+        "fanlar": {
+            "Biologiya": ["Hujayra", "DNK tuzilishi", "Fotosintez", "Genetika", "Evolyutsiya"],
+            "Tarix": ["Qadimgi dunyo", "Amir Temur davri", "Mustamlakachilik", "Mustaqillik", "Zamonaviy tarix"],
+            "O'zbek tili": ["Imlo", "So'z turkumlari", "Sintaksis", "Uslubiyat", "Matn tahlili"]
+        }
     }
+
+# Foydalanuvchilar natijalarini saqlash uchun
+results_db = {} 
+
+@app.post("/submit_result")
+async def submit_result(user_name: str, score: int, task_id: int):
+    # Har bir foydalanuvchi uchun alohida natija saqlash
+    results_db[user_name] = {"score": score, "task_id": task_id}
+    return {"status": "Saqlandi"}
+
+@app.get("/admin/stats")
+async def get_stats():
+    # Admin uchun barcha natijalarni qaytarish
+    return results_db
 
 # 3. AI Maslahatchi (Sun'iy intellekt - Kommentariyada)
 # @app.post("/ask-ai")
 # async def ask_ai(data: UserAction):
 #     prompt = f"{data.fan} fani bo'yicha savol: {data.savol}"
 #     response = model.generate_content(prompt)
-#     return {"javob": response.text}
 
 # 4. Ballar va Kitoblar (Gamification - Baza simulyatsiyasi bilan)
 @app.post("/exchange")
