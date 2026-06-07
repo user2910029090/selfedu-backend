@@ -8,7 +8,10 @@ app = FastAPI()
 
 # CORS - Frontend bilan xavfsiz bog'lanish uchun
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-
+# Server uyg'oq ekanini tekshirish uchun bosh sahifa yo'nalishi
+@app.get("/")
+async def root():
+    return {"status": "alive", "message": "SelfEdu_Ai backend is working!"}
 # Groq AI sozlamalari
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "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")
 ai_client = Groq(api_key=GROQ_API_KEY)
